@@ -1,0 +1,29 @@
+pipeline {
+    agent any
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/ulucv/arf-case-study.git'
+            }
+        }
+        stage('Build') {
+            steps {
+                script {
+                    // Build the Docker image using the Dockerfile located under app/Dockerfile
+                    dockerImage = docker.build("ulucv/arf-case-study:${env.BUILD_NUMBER}", "app/Dockerfile")
+                }
+            }
+        }
+        stage('Push') {
+            steps {
+                script {
+                    // Use the docker-hub-credentials to authenticate with Docker Hub
+                    docker.withRegistry('https://index.docker.io/v1/', 'docker-hub-credentials') {
+                        // Push the image to Docker Hub
+                        dockerImage.push()
+                    }
+                }
+            }
+        }
+    }
+}
